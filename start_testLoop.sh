@@ -15,7 +15,12 @@ tempTestDir='temp/testDefs'
 testMasterName='currentTests.csv'
 
 jmxRunFile='temp/currentJmxRun.jmx'
-jmxFile='jmx/baseline.jmx'
+jmxFile='jmx/parameterizedramp.jmx'
+jmxDestFile='/tmp/parameterizedramp.jmx'
+
+payloadScript="payload_script.sh"
+payloadDestFile="/tmp/payload_script.sh"
+
 working_dir='k8sDefs'
 # obsolete
 #if [ $doK8s -ne 0 ]
@@ -58,6 +63,8 @@ do
         curTestLoadName=${curTestArray[4]}
         curTestFile=$tempTestDir/$curTestLoadName
         curTestFile=`echo $curTestFile | tr --delete '\r'`  # Windows line endings are the devil
+
+        # Build the script to be injected
         echo "Reading definition from $curTestFile"
 
         IFS=$'\n'
@@ -105,28 +112,47 @@ do
                     test_name="$(basename "$jmxRunFile")"
 
 
-                    if [ $doK8s -ne 0 ]
-                    then 
-                        # TODO - check to see if the namespace already exists
-                        workloadTenant=$curTestName
-                        kubectl create namespace $workloadTenant
-
-                        echo "Namspace $workloadTenant has been created"
-
-                        # Create  Master pod details
-                        echo "Creating Jmeter Master"
-                        kubectl create -n $workloadTenant -f $working_dir/jmeter_master_configmap.yaml
-
-                        kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
-                        kubectl cp "$jmxRunFile" -n $workloadTenant "$master_pod:/$test_name"
-
-                        # Starting Jmeter load test
-
-                        kubectl exec -ti -n $workloadTenant $master_pod -- /bin/bash /load_test "$test_name"
-                    fi
+                    
                 fi
             fi
         done
+        # Create K8s & Inject script
+        if [ $doK8s -ne 0 ]
+        then 
+            # TODO - check to see if the namespace already exists
+            workloadTenant=$curTestName
+            # DEBUG
+            kubectl delete namespace $workloadTenant
+            kubectl create namespace $workloadTenant
+
+            echo "Namspace $workloadTenant has been created"
+
+            # Create  Master pod details
+            echo "Creating Jmeter Master"
+            kubectl create -n $workloadTenant -f $working_dir/jmeter_master_configmap.yaml
+
+            kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
+
+            #TODO - make this check on the status of master instead of arbitrary...
+            echo Waiting for master pod to be ready
+            sleep 60
+            master_pod=`kubectl get po -n $workloadTenant | grep jmeter-master | awk '{print $1}'`
+
+            echo Copying payload to master pod
+            # Copy the jmx template to the pod
+            kubectl cp "$jmxRunFile" -n $workloadTenant "$master_pod:/$jmxDestFile"
+
+            # Copy the script to the pod
+            kubectl cp "$payloadScript" -n $workloadTenant "$master_pod:/$payloadDestFile"
+
+            kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
+            # run the script
+            kubectl exec -ti -n $workloadTenant $master_pod -- $payloadDestFile "10.0.0.1" "?marco" "1,2,3,4;5,6,7,8;9,10,11,12"
+          
+            # Copy the result out
+            #TODO
+
+        fi
     fi
 
 

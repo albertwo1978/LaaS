@@ -87,7 +87,7 @@
             <collectionProp name="-1796896661">
               <stringProp name="48">0</stringProp>
               <stringProp name="943612526">${__P(numUsers,5)}</stringProp>
-              <stringProp name="1978715104">${__P(duration,500)}</stringProp>
+              <stringProp name="1978715104">${__P(duration,60)}</stringProp>
             </collectionProp>
           </collectionProp>
         </kg.apc.jmeter.timers.VariableThroughputTimer>
