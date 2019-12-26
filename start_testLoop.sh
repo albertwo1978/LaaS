@@ -3,7 +3,7 @@
 
 # Debug Settings
 doBlobUpdate=0 # 0 = disable
-doK8s=0 # 0 = disable
+doK8s=1 # 0 = disable
 
 
 integerCheck='^[0-9]+$'
@@ -16,11 +16,12 @@ testMasterName='currentTests.csv'
 
 jmxRunFile='temp/currentJmxRun.jmx'
 jmxFile='jmx/baseline.jmx'
-
-if [ $doK8s -ne 0 ]
-then 
-    ./start_jmeterPods.sh
-fi
+working_dir='k8sDefs'
+# obsolete
+#if [ $doK8s -ne 0 ]
+#then 
+#    ./start_jmeterPods.sh
+#fi
 
 blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
 
@@ -97,7 +98,7 @@ do
                     sedString="s/{numUsers}/$numUsers/g;s/{duration}/$duration/g;s/{ramp}/$ramp/g;s/{throughputPerMin}/$throughputPerMin/g"
                     
                     
-                    echo $sedString
+                    #echo $sedString
 
                     sed $sedString $jmxFile > $jmxRunFile
 
@@ -106,8 +107,17 @@ do
 
                     if [ $doK8s -ne 0 ]
                     then 
-                        # Get Master pod details
+                        # TODO - check to see if the namespace already exists
+                        workloadTenant=$curTestName
+                        kubectl create namespace $workloadTenant
 
+                        echo "Namspace $workloadTenant has been created"
+
+                        # Create  Master pod details
+                        echo "Creating Jmeter Master"
+                        kubectl create -n $workloadTenant -f $working_dir/jmeter_master_configmap.yaml
+
+                        kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
                         kubectl cp "$jmxRunFile" -n $workloadTenant "$master_pod:/$test_name"
 
                         # Starting Jmeter load test
