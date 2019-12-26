@@ -49,6 +49,7 @@ IFS=$'\n'
 masterConfig=`cat $testMasterFile`
 for curTestLine in $masterConfig
 do
+    testParamString=""
     # TODO - ignore first line
     echo $curTestLine
     if [[ $curTestLine == CurTest* ]]
@@ -82,8 +83,7 @@ do
             else
                
 
-                #DEBUG
-                duration=10
+               
                 echo $curTestDefLine
             
                 # Feed integer string into jmx file and run test
@@ -99,23 +99,16 @@ do
                     echo $ramp
                     echo $throughputPerMin
                 
-                
-
-
-                    sedString="s/{numUsers}/$numUsers/g;s/{duration}/$duration/g;s/{ramp}/$ramp/g;s/{throughputPerMin}/$throughputPerMin/g"
-                    
-                    
-                    #echo $sedString
-
-                    sed $sedString $jmxFile > $jmxRunFile
-
-                    test_name="$(basename "$jmxRunFile")"
+                    testParamString=$testParamString$numUsers,$duration,$throughputPerMin,$ramp\;
 
 
                     
                 fi
             fi
         done
+        # Remove the last character (trailing ;)
+        testParamString=${testParamString%?}
+        echo Test Params: $testParamString
         # Create K8s & Inject script
         if [ $doK8s -ne 0 ]
         then 
@@ -147,7 +140,8 @@ do
 
             kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
             # run the script
-            kubectl exec -ti -n $workloadTenant $master_pod -- $payloadDestFile "10.0.0.1" "?marco" "1,2,3,4;5,6,7,8;9,10,11,12"
+            # TODO - Talk to Al about this - it gets messy in the output!
+            kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
           
             # Copy the result out
             #TODO
