@@ -57,7 +57,7 @@ do
         echo Skipping First Line of Test List
     else
         IFS=',' read -ra curTestArray  <<< $curTestLine
-        curTestName=${curTestArray[0]}
+        curTestName=${curTestArray[0],,} 
         curTestEnabled=${curTestArray[1]}
         curTestURL=${curTestArray[2]}
         curTestParam=${curTestArray[3]}
@@ -65,7 +65,7 @@ do
         curTestFile=$tempTestDir/$curTestLoadName
         curTestFile=`echo $curTestFile | tr --delete '\r'`  # Windows line endings are the devil
 
-        if [[ $curTestEnabled != TRUE]]
+        if [[ $curTestEnabled != TRUE ]]
         then
             echo Skipping Disabled Test
         else
@@ -131,6 +131,7 @@ do
 
                 kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
 
+
                 #TODO - make this check on the status of master instead of arbitrary...
                 echo Waiting for master pod to be ready
                 sleep 60
@@ -145,6 +146,12 @@ do
 
 
                 kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
+
+
+                # TODO - Talk to Al about this - should probably be done in the image
+
+                kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
+                kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
                 # run the script
                 # TODO - Talk to Al about this - it gets messy in the output!
                 kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
