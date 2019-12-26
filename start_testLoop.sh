@@ -152,12 +152,14 @@ do
 
                 kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
                 kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
+                kubectl exec -i -n $workloadTenant $master_pod -- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
                 # run the script
                 # TODO - Talk to Al about this - it gets messy in the output!
-                kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
+                kubectl exec -ti -n $workloadTenant $master_pod --  $payloadDestFile "10.0.0.1" "?marco" "$testParamString" 
+                #DEBUG - use nohup
+                #kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
             
-                # Copy the result out
-                #TODO
 
             fi
         fi
