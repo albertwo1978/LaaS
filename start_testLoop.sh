@@ -65,87 +65,94 @@ do
         curTestFile=$tempTestDir/$curTestLoadName
         curTestFile=`echo $curTestFile | tr --delete '\r'`  # Windows line endings are the devil
 
-        # Build the script to be injected
-        echo "Reading definition from $curTestFile"
+        if [[ $curTestEnabled != TRUE]]
+        then
+            echo Skipping Disabled Test
+        else
 
-        IFS=$'\n'
-        curTestDefText=`cat $curTestFile`
-        for curTestDefLine in $curTestDefText
-        do
-            IFS=',' read -ra testArray <<< "$curTestDefLine"
-            numUsers=`echo ${testArray[0]} | tr --delete '\r'`
-            duration=`echo ${testArray[1]} | tr --delete '\r'`
-            ramp=`echo ${testArray[2]} | tr --delete '\r'`
-            
-            if [[ $numUsers == NumUsers* ]]
-            then
-                echo Skipping First Line of Test Def
-            else
-               
+            # Build the script to be injected
+            echo "Reading definition from $curTestFile"
 
-               
-                echo $curTestDefLine
-            
-                # Feed integer string into jmx file and run test
-                if ! [[ $numUsers =~ $integerCheck && $duration =~ $integerCheck && $ramp =~ $integerCheck ]]
-                then
-                    echo "Non-integer input detected. Skipping line." 
-                else
-                    # Script created to launch Jmeter tests directly from the current terminal without accessing the jmeter master pod.
-                    # It requires that you supply the path to the jmx file
-                    ((throughputPerMin=$numUsers*60)) 
-                    echo $numUsers
-                    echo $duration
-                    echo $ramp
-                    echo $throughputPerMin
+            IFS=$'\n'
+            curTestDefText=`cat $curTestFile`
+            for curTestDefLine in $curTestDefText
+            do
+                IFS=',' read -ra testArray <<< "$curTestDefLine"
+                numUsers=`echo ${testArray[0]} | tr --delete '\r'`
+                duration=`echo ${testArray[1]} | tr --delete '\r'`
+                ramp=`echo ${testArray[2]} | tr --delete '\r'`
                 
-                    testParamString=$testParamString$numUsers,$duration,$throughputPerMin,$ramp\;
+                if [[ $numUsers == NumUsers* ]]
+                then
+                    echo Skipping First Line of Test Def
+                else
+                
 
-
+                
+                    echo $curTestDefLine
+                
+                    # Feed integer string into jmx file and run test
+                    if ! [[ $numUsers =~ $integerCheck && $duration =~ $integerCheck && $ramp =~ $integerCheck ]]
+                    then
+                        echo "Non-integer input detected. Skipping line." 
+                    else
+                        # Script created to launch Jmeter tests directly from the current terminal without accessing the jmeter master pod.
+                        # It requires that you supply the path to the jmx file
+                        ((throughputPerMin=$numUsers*60)) 
+                        echo $numUsers
+                        echo $duration
+                        echo $ramp
+                        echo $throughputPerMin
                     
+                        testParamString=$testParamString$numUsers,$duration,$throughputPerMin,$ramp\;
+
+
+                        
+                    fi
                 fi
+            done
+            # Remove the last character (trailing ;)
+            testParamString=${testParamString%?}
+            echo Test Params: $testParamString
+            # Create K8s & Inject script
+            if [ $doK8s -ne 0 ]
+            then 
+                # TODO - check to see if the namespace already exists
+                workloadTenant=$curTestName
+                # DEBUG
+                kubectl delete namespace $workloadTenant
+                kubectl create namespace $workloadTenant
+
+                echo "Namspace $workloadTenant has been created"
+
+                # Create  Master pod details
+                echo "Creating Jmeter Master"
+                kubectl create -n $workloadTenant -f $working_dir/jmeter_master_configmap.yaml
+
+                kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
+
+                #TODO - make this check on the status of master instead of arbitrary...
+                echo Waiting for master pod to be ready
+                sleep 60
+                master_pod=`kubectl get po -n $workloadTenant | grep jmeter-master | awk '{print $1}'`
+
+                echo Copying payload to master pod
+                # Copy the jmx template to the pod
+                kubectl cp "$jmxRunFile" -n $workloadTenant "$master_pod:/$jmxDestFile"
+
+                # Copy the script to the pod
+                kubectl cp "$payloadScript" -n $workloadTenant "$master_pod:/$payloadDestFile"
+
+
+                kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
+                # run the script
+                # TODO - Talk to Al about this - it gets messy in the output!
+                kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
+            
+                # Copy the result out
+                #TODO
+
             fi
-        done
-        # Remove the last character (trailing ;)
-        testParamString=${testParamString%?}
-        echo Test Params: $testParamString
-        # Create K8s & Inject script
-        if [ $doK8s -ne 0 ]
-        then 
-            # TODO - check to see if the namespace already exists
-            workloadTenant=$curTestName
-            # DEBUG
-            kubectl delete namespace $workloadTenant
-            kubectl create namespace $workloadTenant
-
-            echo "Namspace $workloadTenant has been created"
-
-            # Create  Master pod details
-            echo "Creating Jmeter Master"
-            kubectl create -n $workloadTenant -f $working_dir/jmeter_master_configmap.yaml
-
-            kubectl create -n $workloadTenant -f $working_dir/jmeter_master_deploy.yaml
-
-            #TODO - make this check on the status of master instead of arbitrary...
-            echo Waiting for master pod to be ready
-            sleep 60
-            master_pod=`kubectl get po -n $workloadTenant | grep jmeter-master | awk '{print $1}'`
-
-            echo Copying payload to master pod
-            # Copy the jmx template to the pod
-            kubectl cp "$jmxRunFile" -n $workloadTenant "$master_pod:/$jmxDestFile"
-
-            # Copy the script to the pod
-            kubectl cp "$payloadScript" -n $workloadTenant "$master_pod:/$payloadDestFile"
-
-            kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
-            # run the script
-            # TODO - Talk to Al about this - it gets messy in the output!
-            kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
-          
-            # Copy the result out
-            #TODO
-
         fi
     fi
 
