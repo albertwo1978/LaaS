@@ -19,14 +19,22 @@ spec:
         image: kubernautslabs/jmeter_master:latest
         imagePullPolicy: IfNotPresent
         command: [ "/bin/bash", "-c", "--" ]
-        args: [ "while true; do sleep 30; done;" ]
+        args: [ "while [ ! -f /tmp/isdone ]; do sleep 30; done;" ]
         volumeMounts:
           - name: loadtest
             mountPath: /load_test
             subPath: "load_test"
+          - name: azure
+            mountPath: "/mnt/azure"
         ports:
         - containerPort: 60000
+      restartPolicy: OnFailure
       volumes:
       - name: loadtest 
         configMap:
          name: jmeter-load-test
+      - name: azure
+        azureFile:  # https://docs.microsoft.com/en-us/azure/aks/azure-files-volume
+          secretName: jmeterlogsecret
+          shareName: jmeterlogs
+          readOnly: false

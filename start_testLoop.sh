@@ -4,7 +4,7 @@
 # Debug Settings
 doBlobUpdate=0 # 0 = disable
 doK8s=1 # 0 = disable
-
+doParallelRuns=0 #0= disable
 
 integerCheck='^[0-9]+$'
 
@@ -120,10 +120,16 @@ do
                 # TODO - check to see if the namespace already exists
                 workloadTenant=$curTestName
                 # DEBUG
+
+                echo "Namspace $workloadTenant deleting"
                 kubectl delete namespace $workloadTenant
+
+                echo "Namspace $workloadTenant creating"
                 kubectl create namespace $workloadTenant
 
-                echo "Namspace $workloadTenant has been created"
+
+                echo Cloning Secret # TODO - Talk to Al if this is reasonable. Note assumption that there is a secret to clone from. Al says I can do this with permissions across namespaces
+                kubectl get secret jmeterlogsecret -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
 
                 # Create  Master pod details
                 echo "Creating Jmeter Master"
@@ -148,19 +154,20 @@ do
                 kubectl exec -ti -n $workloadTenant $master_pod -- chmod 755 $payloadDestFile
 
 
-                # TODO - Talk to Al about this - should probably be done in the image
+                # TODO - Talk to Al about this - should probably be done in the image. Al agrees
 
                 kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
                 kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
-                kubectl exec -i -n $workloadTenant $master_pod -- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                # Not needed - using Azure Files to upload rather than blob kubectl exec -i -n $workloadTenant $master_pod -- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
                 # run the script
                 # TODO - Talk to Al about this - it gets messy in the output!
-                kubectl exec -ti -n $workloadTenant $master_pod --  $payloadDestFile "10.0.0.1" "?marco" "$testParamString" 
-                #DEBUG - use nohup
-                #kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "10.0.0.1" "?marco" "$testParamString" &
-            
-
+                if [ $doParallelRuns -ne 0 ] 
+                then
+                        kubectl exec -ti -n $workloadTenant $master_pod -- nohup $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString" &
+                else
+                        kubectl exec -ti -n $workloadTenant $master_pod --  $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString" 
+                fi
             fi
         fi
     fi
