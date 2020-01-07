@@ -1,0 +1,13 @@
+CurTest,  Enabled, CurEndPoint,Path, CurTestName
+bing,FALSE,www.bing.com,,testlimit.txt
+azcatsynthappbaseline,FALSE,52.138.116.190,?marco,jediprod.txt
+azcatsynthappbaseline,FALSE,52.138.116.190,?marco,steady.txt
+azcatsynthappbaseline,FALSE,52.138.116.190,?marco,testlimit.txt
+azcatsynthappnocrasha,FALSE,52.167.17.34,?marco,testlimitlow.txt
+azcatsynthappnocrashb,FALSE,52.167.17.34,?marco,testlimitlow.txt
+azcatsynthappnocrashc,FALSE,52.167.17.34,?marco,testlimitlow.txt
+azcatsynthappnocrashd,FALSE,52.167.17.34,?marco,steady.txt
+helloworld,TRUE,azcathelloworld.azurewebsites.net,?marco,steady.txt
+
+
+
