@@ -28,19 +28,21 @@ do
         curl $targetIP/$targetPath -o /mnt/azure/curl$curTimeString.txt
     else
         echo Starting JMeter
-        jMeterCmd="jmeter -n -t \"/tmp/parameterizedtestsegment.jmx\" -JnumUsers=$numUsers -JtargetIP=\"$targetIP\" -JthroughputPerMin=$throughput -Jduration=$duration -JoutFile=\"$tmpDir$outFile\" -Jramp=$ramp -Jpath=\"$targetPath\"" 
+        jMeterCmd="jmeter -n -t \"/tmp/main.jmx\" -JnumUsers=$numUsers -JtargetIP=\"$targetIP\" -JthroughputPerMin=$throughput -Jduration=$duration -JoutFile=\"$tmpDir$outFile\" -Jramp=$ramp -Jpath=\"$targetPath\"" 
         #jMeterCmd='cat parameterizedramp.jmx'
         echo $jMeterCmd
         #$jMeterCmd
         eval $jMeterCmd
-        # Upload to storage
-        echo 10 second sleep
-        sleep 10
-        echo Moving Output
-        mv $tmpDir$outFile $destDir$outFile
-    fi
+       fi
 
 done
+
+# Upload to storage
+echo 10 second sleep
+sleep 10
+echo Moving Output
+mv $tmpDir*.csv $destDir*.csv
+    
 echo Waiting to allow files to sync to Azure
 sleep 60
 echo Signal completion

@@ -16,8 +16,18 @@ spec:
     spec:
       containers:
       - name: jmmaster
+        env:
+        - name: 'JVM_ARGS'
+          value: '-Xms756M -Xmx756M'
         image: kubernautslabs/jmeter_master:latest
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:  
+            memory: "1024Mi"
+            cpu: "2000m"
+          limits:
+            memory: "1500Mi"
+            cpu: "4000m"
         command: [ "/bin/bash", "-c", "--" ]
         args: [ "while [ ! -f /tmp/isdone ]; do sleep 30; done;" ]
         volumeMounts:
