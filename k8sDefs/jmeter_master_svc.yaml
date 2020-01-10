@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jmeter-master
+  labels:
+    app: jmeter-master
+spec:
+  loadBalancerIP: 51.143.5.25
+  type: LoadBalancer
+  ports:
+    - port: 80
+      name: http
+      targetPort: 80
+  selector:
+    app: jmeter-master

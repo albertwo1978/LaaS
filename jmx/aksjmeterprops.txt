@@ -1,0 +1,2 @@
+# Increase the lifetime of a TCP connection to avoid SNAT port exhaustion due to AKS' use of Load Balancer
+httpclient4.time_to_live=200000

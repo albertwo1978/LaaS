@@ -125,7 +125,7 @@ do
                     # Check if job is currently running
                     kubectl -n $workloadTenant get pods
                     podStatus=`kubectl -n $workloadTenant get pods`
-                    if [[ $podStatus == *Running* ]]
+                    if [[ $podStatus == *Running* || $podStatus == *Image* ]]
                     then
                         echo Job is still running in $workloadTenant
                     else 
@@ -163,9 +163,9 @@ do
 
 
                         # TODO - Talk to Al about this - should probably be done in the image. Al agrees
-
-                        kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
-                        kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
+                        # Moved to the image
+                        #kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
+                        #kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
                         # Not needed - using Azure Files to upload rather than blob kubectl exec -i -n $workloadTenant $master_pod -- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
                         # run the script
