@@ -137,7 +137,7 @@ do
                         kubectl create namespace $workloadTenant
 
                         echo Cloning Secret # TODO - Talk to Al if this is reasonable. Note assumption that there is a secret to clone from. Al says I can do this with permissions across namespaces
-                        kubectl get secret jmeterlogsecret -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
+                        kubectl get secret azblob -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
 
                         # Create  Master pod details
                         echo "Creating Jmeter Master"

@@ -38,12 +38,13 @@ do
 done
 
 # Upload to storage
-echo 10 second sleep
-sleep 10
+echo 1 second sleep
+sleep 1
 echo Moving Output
-mv $tmpDir*.csv $destDir
-    
-echo Waiting to allow files to sync to Azure
-sleep 60
+#mv $tmpDir*.csv $destDir
+echo Copying to BLOB    
+blobToken=`cat /etc/azblob/azblobsas`
+az storage blob upload-batch --account-name storannandale -s $tmpDir -d aksjmeter --pattern *.csv --sas-token $blobToken
+#sleep 60
 echo Signal completion
 echo Complete >> /tmp/isdone

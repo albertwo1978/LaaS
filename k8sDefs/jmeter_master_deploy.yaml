@@ -19,7 +19,7 @@ spec:
         env:
         - name: 'JVM_ARGS'
           value: '-Xms756M -Xmx756M'
-        image: daweins/jmeterbase:v1
+        image: daweins/jmeterbase:v3
         imagePullPolicy: IfNotPresent
         resources:
           requests:  
@@ -34,8 +34,9 @@ spec:
           - name: loadtest
             mountPath: /load_test
             subPath: "load_test"
-          - name: azure
-            mountPath: "/mnt/azure"
+          - name: azblob
+            mountPath: "/etc/azblob"
+            readOnly: true
         ports:
         - containerPort: 60000
       restartPolicy: OnFailure
@@ -43,8 +44,6 @@ spec:
       - name: loadtest 
         configMap:
          name: jmeter-load-test
-      - name: azure
-        azureFile:  # https://docs.microsoft.com/en-us/azure/aks/azure-files-volume
-          secretName: jmeterlogsecret
-          shareName: jmeterlogs
-          readOnly: false
+      - name: azblob
+        secret:
+          secretName: azblob
