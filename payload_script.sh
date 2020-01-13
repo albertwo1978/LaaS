@@ -41,7 +41,7 @@ done
 echo 10 second sleep
 sleep 10
 echo Moving Output
-mv $tmpDir*.csv $destDir*.csv
+mv $tmpDir*.csv $destDir
     
 echo Waiting to allow files to sync to Azure
 sleep 60
