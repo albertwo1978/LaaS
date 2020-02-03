@@ -1,6 +1,0 @@
-NumUsers,  DurationSeconds, RampSeconds
-100,120,120
-100,180,180
-200,120,120
-300,240,240
-

@@ -1,2 +1,0 @@
-NumUsers,  DurationSeconds, RampSeconds
-1,86400,0
