@@ -167,10 +167,12 @@ do
                     curLogName="/tmp/payloadlog_"$workloadTenant"_"$curDate".txt"
                     if [ $doParallelRuns -ne 0 ] 
                     then
-                            kubectl exec  -n $workloadTenant $master_pod -- nohup $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString" >> $curLogName &
+                            cmdToExecute=`kubectl exec  -n $workloadTenant $master_pod -- nohup $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString" >> $curLogName &`
                     else
-                            kubectl exec  -n $workloadTenant $master_pod --  $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString" 
+                            cmdToExecute=`kubectl exec  -n $workloadTenant $master_pod --  $payloadDestFile "$curTestURL" "$curTestParam" "$testParamString"`
                     fi
+                    echo $cmdToExecute
+                    eval $cmdToExecute
                 fi
             fi
         fi
