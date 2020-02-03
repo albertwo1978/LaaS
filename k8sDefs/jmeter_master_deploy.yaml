@@ -19,7 +19,7 @@ spec:
         env:
         - name: 'JVM_ARGS'
           value: '-Xms756M -Xmx756M'
-        image: daweins/jmeterbase:v3
+        image: daweins/jmeterbase:v5
         imagePullPolicy: IfNotPresent
         resources:
           requests:  

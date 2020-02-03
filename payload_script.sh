@@ -1,5 +1,7 @@
 #!/usr/bin/env bash 
-
+jmeterPath='/apache-jmeter-5.2.1/bin/jmeter'
+#jmeterPath='jmeter'
+jmeterProps='-Dhttpclient4.time_to_live=1000000 -Jhttpclient4.time_to_live=1000000'
 targetIP=$1
 displaytargetIP=`sed 's/\./_/g' <<< $targetIP`
 targetPath=$2
@@ -28,10 +30,14 @@ do
         curl $targetIP/$targetPath -o /mnt/azure/curl$curTimeString.txt
     else
         echo Starting JMeter
-        jMeterCmd="jmeter -n -t \"/tmp/main.jmx\" -JnumUsers=$numUsers -JtargetIP=\"$targetIP\" -JthroughputPerMin=$throughput -Jduration=$duration -JoutFile=\"$tmpDir$outFile\" -Jramp=$ramp -Jpath=\"$targetPath\"" 
-        #jMeterCmd='cat parameterizedramp.jmx'
+        if [ $ramp -ne 0 ]
+        then
+            echo "Ramping"
+            jMeterCmd="$jmeterPath -n -t \"/tmp/main_ramp.jmx\" $jmeterProps -JnumUsers=$numUsers -JtargetIP=\"$targetIP\" -JthroughputPerMin=$throughput -Jduration=$duration -JoutFile=\"$tmpDir$outFile\" -Jramp=$ramp -Jpath=\"$targetPath\"" 
+        else
+            jMeterCmd="$jmeterPath -n -t \"/tmp/main.jmx\" $jmeterProps -JnumUsers=$numUsers -JtargetIP=\"$targetIP\" -JthroughputPerMin=$throughput -Jduration=$duration -JoutFile=\"$tmpDir$outFile\" -Jramp=$ramp -Jpath=\"$targetPath\"" 
+        fi
         echo $jMeterCmd
-        #$jMeterCmd
         eval $jMeterCmd
        fi
 
@@ -45,6 +51,7 @@ echo Moving Output
 echo Copying to BLOB    
 blobToken=`cat /etc/azblob/azblobsas`
 az storage blob upload-batch --account-name storannandale -s $tmpDir -d aksjmeter --pattern *.csv --sas-token $blobToken
-#sleep 60
+echo Sleeping 30 minutes to delay next run
+sleep 1800
 echo Signal completion
 echo Complete >> /tmp/isdone
