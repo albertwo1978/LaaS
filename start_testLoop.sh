@@ -16,6 +16,8 @@ testMasterName='currentTests.csv'
 
 jmxFile='jmx/main.jmx'
 jmxDestFile='/tmp/main.jmx'
+jmxRampFile='jmx/main_ramp.jmx'
+jmxRampDestFile='/tmp/main_ramp.jmx'
 
 payloadScript="payload_script.sh"
 payloadDestFile="/tmp/payload_script.sh"
@@ -154,6 +156,7 @@ do
                         echo Copying payload to master pod
                         # Copy the jmx template to the pod
                         kubectl cp "$jmxFile" -n $workloadTenant "$master_pod:/$jmxDestFile"
+                        kubectl cp "$jmxRampFile" -n $workloadTenant "$master_pod:/$jmxRampDestFile"
 
                         # Copy the script to the pod
                         kubectl cp "$payloadScript" -n $workloadTenant "$master_pod:/$payloadDestFile"
