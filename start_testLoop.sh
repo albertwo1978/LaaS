@@ -4,7 +4,7 @@
 # Debug Settings
 doBlobUpdate=0 # 0 = disable
 doK8s=1 # 0 = disable
-doParallelRuns=0 #0= disable
+doParallelRuns=1 #0= disable
 
 integerCheck='^[0-9]+$'
 
