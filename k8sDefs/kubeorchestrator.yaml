@@ -10,10 +10,10 @@ spec:
       command: [ "/bin/bash", "-c", "--" ]
       args: [ "while [ ! -f /tmp/isdone ]; do git clone https://github.com/daweins/LaaS.git; cd LaaS;  chmod 755 ./do_a_loop.sh; ./do_a_loop.sh;  sleep 60; done;" ]
       volumeMounts:
-        - name: azblob
-          mountPath: "/etc/azblob"
-          readOnly: true
-    volumes:
-    - name: azblob
-      secret:
-        secretName: azblob
+      - mountPath: "/etc/azblob"
+        name: azblob
+        readOnly: true
+  volumes:
+  - name: azblob
+    secret:
+      secretName: azblob
