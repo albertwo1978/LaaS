@@ -22,11 +22,11 @@ payloadDestFile="/tmp/payload_script.sh"
 
 working_dir='k8sDefs'
 
-blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
 
 # Download the Test Definitions from Blob Storage
 if [ $doBlobUpdate -ne 0 ] 
 then
+    blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
     for curBlobName in $blobJSON
     do
         cleanBlobName=`sed 's/"//g' <<< $curBlobName` 
@@ -130,7 +130,7 @@ do
                     kubectl create namespace $workloadTenant
 
                     echo Cloning Secret # TODO - Talk to Al if this is reasonable. Note assumption that there is a secret to clone from. Al says I can do this with permissions across namespaces
-                    kubectl get secret azblob -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
+                    kubectl get secret azblob -n default -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
 
                     # Create  Master pod details
                     echo "Creating Jmeter Master"
