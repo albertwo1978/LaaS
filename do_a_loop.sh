@@ -2,7 +2,7 @@
 # Testing outer loop
 
 # Debug Settings
-doBlobUpdate=0 # 0 = disable
+doBlobUpdate=1 # 0 = disable
 doK8s=1 # 0 = disable
 doParallelRuns=1 #0= disable
 
@@ -24,18 +24,20 @@ working_dir='k8sDefs'
 
 
 # Download the Test Definitions from Blob Storage
-if [ $doBlobUpdate -ne 0 ] 
-then
-    blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
-    for curBlobName in $blobJSON
-    do
-        cleanBlobName=`sed 's/"//g' <<< $curBlobName` 
-        # download the blob to temp
-        curBlobDestFile=$tempTestDir/$cleanBlobName
-        echo $curBlobDestFile
-        az storage blob download --container-name $testContainerName --account-name $testSAName --subscription $testSubID -n $cleanBlobName -f $curBlobDestFile
-
-    done
+if [ $doBlobUpdate -ne 0] 
+then    
+    blobToken=`cat /etc/azblob/azblobsas`
+    az storage blob download-batch --account-name $testSAName -s $tempTestDir -s $testContainerName --sas-token $blobToken
+    #blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
+    #for curBlobName in $blobJSON
+    #do
+    #    cleanBlobName=`sed 's/"//g' <<< $curBlobName` 
+    #    # download the blob to temp
+    #    curBlobDestFile=$tempTestDir/$cleanBlobName
+    #    echo $curBlobDestFile
+    #    az storage blob download --container-name $testContainerName --account-name $testSAName --subscription $testSubID -n $cleanBlobName -f $curBlobDestFile
+    #
+    #   done
 fi
 # Read the Master Test Config
 testMasterFile=$tempTestDir/$testMasterName
