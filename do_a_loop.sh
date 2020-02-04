@@ -180,3 +180,5 @@ do
 
 
 done
+echo "Complete - sleeping for 30 seconds"
+sleep 30
