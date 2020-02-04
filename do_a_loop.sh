@@ -24,7 +24,7 @@ working_dir='k8sDefs'
 
 
 # Download the Test Definitions from Blob Storage
-if [ $doBlobUpdate -ne 0] 
+if [ $doBlobUpdate -ne 0 ] 
 then    
     blobToken=`cat /etc/azblob/azblobsas`
     az storage blob download-batch --account-name $testSAName -s $tempTestDir -s $testContainerName --sas-token $blobToken
