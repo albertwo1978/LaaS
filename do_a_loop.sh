@@ -27,7 +27,7 @@ working_dir='k8sDefs'
 if [ $doBlobUpdate -ne 0 ] 
 then    
     blobToken=`cat /etc/azblob/azblobsas`
-    az storage blob download-batch --account-name $testSAName -s $tempTestDir -s $testContainerName --sas-token $blobToken
+    az storage blob download-batch --account-name $testSAName -d $tempTestDir -s $testContainerName --sas-token $blobToken
     #blobJSON=`az storage blob list -c $testContainerName --account-name $testSAName --subscription $testSubID | jq '.[].name'`
     #for curBlobName in $blobJSON
     #do
