@@ -1,2 +1,0 @@
-NumUsers,  DurationSeconds, RampSeconds
-600,15,15

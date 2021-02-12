@@ -1,0 +1,19 @@
+apiVersion: v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Pod
+metadata:
+  name: kubeorchestrator
+spec:
+  containers:
+    - name: orchestrator
+      image: daweins/korch:v1
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while [ ! -f /tmp/isdone ]; do git clone https://github.com/daweins/LaaS.git; cd LaaS;  chmod 755 ./do_a_loop.sh; ./do_a_loop.sh;  sleep 60; done;" ]
+      volumeMounts:
+      - mountPath: "/etc/azblob"
+        name: azblob
+        readOnly: true
+  volumes:
+  - name: azblob
+    secret:
+      secretName: azblob

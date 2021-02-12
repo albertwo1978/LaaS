@@ -4,7 +4,7 @@
 # Debug Settings
 doBlobUpdate=0 # 0 = disable
 doK8s=1 # 0 = disable
-doParallelRuns=0 #0= disable
+doParallelRuns=1 #0= disable
 
 integerCheck='^[0-9]+$'
 
@@ -16,6 +16,8 @@ testMasterName='currentTests.csv'
 
 jmxFile='jmx/main.jmx'
 jmxDestFile='/tmp/main.jmx'
+jmxRampFile='jmx/main_ramp.jmx'
+jmxRampDestFile='/tmp/main_ramp.jmx'
 
 payloadScript="payload_script.sh"
 payloadDestFile="/tmp/payload_script.sh"
@@ -125,7 +127,7 @@ do
                     # Check if job is currently running
                     kubectl -n $workloadTenant get pods
                     podStatus=`kubectl -n $workloadTenant get pods`
-                    if [[ $podStatus == *Running* ]]
+                    if [[ $podStatus == *Running* || $podStatus == *Image* ]]
                     then
                         echo Job is still running in $workloadTenant
                     else 
@@ -137,7 +139,7 @@ do
                         kubectl create namespace $workloadTenant
 
                         echo Cloning Secret # TODO - Talk to Al if this is reasonable. Note assumption that there is a secret to clone from. Al says I can do this with permissions across namespaces
-                        kubectl get secret jmeterlogsecret -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
+                        kubectl get secret azblob -o yaml | sed s/"namespace: default"/"namespace: $workloadTenant"/ | kubectl apply -n $workloadTenant -f -
 
                         # Create  Master pod details
                         echo "Creating Jmeter Master"
@@ -154,6 +156,7 @@ do
                         echo Copying payload to master pod
                         # Copy the jmx template to the pod
                         kubectl cp "$jmxFile" -n $workloadTenant "$master_pod:/$jmxDestFile"
+                        kubectl cp "$jmxRampFile" -n $workloadTenant "$master_pod:/$jmxRampDestFile"
 
                         # Copy the script to the pod
                         kubectl cp "$payloadScript" -n $workloadTenant "$master_pod:/$payloadDestFile"
@@ -163,9 +166,9 @@ do
 
 
                         # TODO - Talk to Al about this - should probably be done in the image. Al agrees
-
-                        kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
-                        kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
+                        # Moved to the image
+                        #kubectl exec -i -n $workloadTenant $master_pod -- apt-get update
+                        #kubectl exec -i -n $workloadTenant $master_pod -- apt install curl -y --fix-missing
                         # Not needed - using Azure Files to upload rather than blob kubectl exec -i -n $workloadTenant $master_pod -- curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
                         # run the script
